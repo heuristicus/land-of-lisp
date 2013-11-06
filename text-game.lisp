@@ -22,18 +22,30 @@
 (defparameter *location* 'living-room)
 
 ;; Give a description of the location based on the information found in the node
+;; cadr is the same as (car (cdr '(list))), can use c****r to look at stuff in lists
+;; more easily - the shortcut is only up to 4 a or d characters in place of *
+;; assoc finds the value associated with a symbol in an alist, which is what *nodes* is
 (defun describe-location (location nodes)
   (cadr (assoc location nodes)))
 
 ;; Describe a path given the edge that holds its information
+;; the ` character goes into data mode, but you can flip-flop between code and 
+;; data mode by using the , character. This is called quasiquoting.
 (defun describe-path (edge)
   `(there is a ,(caddr edge) going ,(cadr edge) from here.))
 
 ;; Describe all paths at a given location
+;; The #' operator is equivalent to (function [something]), and makes sure that
+;; functions do not get confused with variables if the names overlap. mapcar maps
+;; a function onto each value of the list that is provided to it. apply is used to
+;; treat items in a list as separate objects and pass them to the subsequent function.
 (defun describe-paths (location edges)
   (apply #'append (mapcar #'describe-path (cdr (assoc location edges)))))
 
 ;; List the objects that can be found at the given location
+;; labels allows the use of the function within the function itself
+;; remove-if-not filters a list, removing items from it if the given function
+;; returns false when the items are given to it.
 (defun objects-at (loc objs obj-locs)
   (labels ((at-loc-p (obj)
 	     (eq (cadr (assoc obj obj-locs)) loc)))

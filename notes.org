@@ -1,82 +1,142 @@
 * functions
-** defparameter
-   Allows the definition of global variables. By convention, global variable
-   names are surrounded by \*var\*, known as *earmuffs*, so that they are easier
-   to distinguish from local variables.
-   
-   Any value that was previously stored in the variable is overwritten. See
-   [[defvar]] for a way to do it without overwriting.
-*** example
-    #+BEGIN_SRC Lisp
-    ;; Defining a new parameter
-    (defparameter *glob* 10)
-    ;; Overwriting the parameter
-    (defparameter *glob* 5)
-    #+END_SRC
-** defvar
-   Allows the definition of global variables, but does not overwrite previous
-   values if they already exist.
-   
-   [[defparameter]] allows the overwriting of the value in global variables.
-*** example
-    #+BEGIN_SRC Lisp
-    ;; Defining a new parameter
-    (defvar *glob* 10)
-    ;; attempting to overwrite (*glob* is still 5)
-    (defvar *glob* 5)
-    #+END_SRC
-** defun
-   Allows the definition of a function.
-*** example
-    #+BEGIN_SRC Lisp
-    (defun func (param1 param2) 
-      (car '(test function heellooo)))
-    #+END_SRC
-** ash
-   Arithmetic shift.
-*** example
+** math functions
+*** expt
+    Exponentiation to a specific power.
+    #+begin_src Lisp
+    ;; 2^3 = 8
+    (expt 2 3)
+    #+end_src
+*** exp
+    Exponentiation with base e.
+    #+begin_src Lisp
+    ;; e^2 = 7.389056
+    (exp 2)
+    #+end_src
+*** ash
+    Arithmetic shift.
     #+BEGIN_SRC Lisp
     ;; shift left (=20)
     (ash 10 1)
     ;; shift right (=5)
     (ash 10 -1)
     #+END_SRC
-** let
-   Allows the definition of local variables. The variables are only accessible
-   in the body of the let function, after the variable definitions. The whole
-   list of declared variables is surrounded by parens, as well as each
-   individual variable definitions.
-*** example
+** definition functions
+*** defparameter
+    Allows the definition of global variables. By convention, global variable
+    names are surrounded by *, known as /earmuffs/, so that they are easier
+    to distinguish from local variables.
+    
+    Any value that was previously stored in the variable is overwritten. See
+    [[defvar]] for a way to do it without overwriting.
+    #+BEGIN_SRC Lisp
+    ;; Defining a new parameter
+    (defparameter *glob* 10)
+    ;; Overwriting the parameter
+    (defparameter *glob* 5)
+    #+END_SRC
+*** defvar
+    Allows the definition of global variables, but does not overwrite previous
+    values if they already exist.
+    
+    [[defparameter]] allows the overwriting of the value in global variables.
+    #+BEGIN_SRC Lisp
+    ;; Defining a new parameter
+    (defvar *glob* 10)
+    ;; attempting to overwrite (*glob* is still 5)
+    (defvar *glob* 5)
+    #+END_SRC
+*** defun
+    Allows the definition of a function.
+    #+BEGIN_SRC Lisp
+    (defun func (param1 param2) 
+    (car '(test function heellooo)))
+    #+END_SRC
+*** let
+    Allows the definition of local variables. The variables are only accessible
+    in the body of the let function, after the variable definitions. The whole
+    list of declared variables is surrounded by parens, as well as each
+    individual variable definitions.
     #+begin_src Lisp
     (let ((a 5)
-          (b 6))
-	  (+ a b))
+    (b 6))
+    (+ a b))
     #+end_src
-** flet
-   Allows the definition of local functions in very much the same way as the let
-   function. The list of functions is surrounded by parens, and so is each
-   individual function definition.
+*** flet
+    Allows the definition of local functions in very much the same way as the let
+    function. The list of functions is surrounded by parens, and so is each
+    individual function definition.
 
-   The functions can only be used within the body of the flet function.
-*** example
+    The functions can only be used within the body of the flet function, and
+    cannot reference each other or themselves. To do that, you need [[labels]].
     #+begin_src Lisp
     ;; single function
     (flet ((f (n)
-              (+ n 10)))
-      (f 5))
+    (+ n 10)))
+    (f 5))
     ;; multiple functions
     (flet ((f (n)
-              (+ n 10))
-	   (g (n)
-	      (* n 2)))
-      (g (f 10)))
+    (+ n 10))
+    (g (n)
+    (* n 2)))
+    (g (f 10)))
     #+end_src
-** 
-** car
-** cdr
-** apply
-** remove-if-not
-** assoc
+*** labels
+    Allows the definition of local functions. The difference from [[flet]] is that
+    local functions can call each other or themselves.
+    #+begin_src Lisp
+    (labels ((a (n)
+    (+ n 5))
+    (b (n)
+    (+ (a n) 6)))
+    (b 10))
+    #+end_src
+** list functions
+*** cons
+    Two pieces of data can be linked with this, regardless of type. This
+    allocates a cons cell which holds two references to the things being
+    linked. Usually, the second item linked is a list.
+    #+begin_src Lisp
+    (cons 'cat 'dog)
+    #+end_src
+    The above links the =cat= and =dog= together. In the REPL, this link is
+    represented by a =.= in between the two symbols, like =(CAT . DOG)=.
+    
+    The =nil= symbol is special, as it is a list terminator. Consing anything
+    with a =nil= on the right hand side results in a list.
+    #+begin_src Lisp
+    (cons 'cat 'nil)
+    #+end_src
+    The above results in a list which contains just =cat=. Lisp hides cons cells
+    as much as possible, preferring to display things as lists.
+
+    The function also allows you to add things to the front of a list.
+    #+begin_src Lisp
+    (cons 'cat '(dog rabbit))
+    #+end_src
+    
+    All lists are constructed from linked cons cells, so what the above is
+    actually doing is:
+    #+begin_src Lisp
+    (cons 'cat (cons 'dog (cons 'rabbit 'nil)))
+    #+end_src
+
+    /A chain of cons cells and a list are the same thing!/
+*** car
+*** cdr
+** other functions
+*** apply
+*** remove-if-not
+*** assoc
 * syntax
+** '
+   The single quote mark enters data mode. Anything in this mode will be treated
+   as data and not as any type of command. This is called quoting.
 ** #'
 ** `
+* terminology
+** quasiquoting
+   This is the term for a piece of code which uses the backtick to allow
+   flipping between code and data mode.
+   #+begin_src Lisp
+   `(one plus one is ,(+ 1 1) and three squared is ,(expt 3 2))
+   #+end_src
