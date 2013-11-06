@@ -1,0 +1,82 @@
+* functions
+** defparameter
+   Allows the definition of global variables. By convention, global variable
+   names are surrounded by \*var\*, known as *earmuffs*, so that they are easier
+   to distinguish from local variables.
+   
+   Any value that was previously stored in the variable is overwritten. See
+   [[defvar]] for a way to do it without overwriting.
+*** example
+    #+BEGIN_SRC Lisp
+    ;; Defining a new parameter
+    (defparameter *glob* 10)
+    ;; Overwriting the parameter
+    (defparameter *glob* 5)
+    #+END_SRC
+** defvar
+   Allows the definition of global variables, but does not overwrite previous
+   values if they already exist.
+   
+   [[defparameter]] allows the overwriting of the value in global variables.
+*** example
+    #+BEGIN_SRC Lisp
+    ;; Defining a new parameter
+    (defvar *glob* 10)
+    ;; attempting to overwrite (*glob* is still 5)
+    (defvar *glob* 5)
+    #+END_SRC
+** defun
+   Allows the definition of a function.
+*** example
+    #+BEGIN_SRC Lisp
+    (defun func (param1 param2) 
+      (car '(test function heellooo)))
+    #+END_SRC
+** ash
+   Arithmetic shift.
+*** example
+    #+BEGIN_SRC Lisp
+    ;; shift left (=20)
+    (ash 10 1)
+    ;; shift right (=5)
+    (ash 10 -1)
+    #+END_SRC
+** let
+   Allows the definition of local variables. The variables are only accessible
+   in the body of the let function, after the variable definitions. The whole
+   list of declared variables is surrounded by parens, as well as each
+   individual variable definitions.
+*** example
+    #+begin_src Lisp
+    (let ((a 5)
+          (b 6))
+	  (+ a b))
+    #+end_src
+** flet
+   Allows the definition of local functions in very much the same way as the let
+   function. The list of functions is surrounded by parens, and so is each
+   individual function definition.
+
+   The functions can only be used within the body of the flet function.
+*** example
+    #+begin_src Lisp
+    ;; single function
+    (flet ((f (n)
+              (+ n 10)))
+      (f 5))
+    ;; multiple functions
+    (flet ((f (n)
+              (+ n 10))
+	   (g (n)
+	      (* n 2)))
+      (g (f 10)))
+    #+end_src
+** 
+** car
+** cdr
+** apply
+** remove-if-not
+** assoc
+* syntax
+** #'
+** `
