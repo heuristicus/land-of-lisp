@@ -163,7 +163,90 @@
     ;; is equivalent to
     '(cat dog rabbit)
     #+end_src
+*** member
+    Returns the element and subsequent list if the queried element is a member.
+    #+begin_src Lisp
+    ;; returns '(1 4 5)
+    (member 1 '(2 3 1 4 5))
+    #+end_src
+*** find-if
+    Finds the first value in a list for which a given function evaluates to
+    true.
+    #+begin_src Lisp
+    (find-if #'oddp '(2 4 6 5 2 4))    
+    #+end_src
+*** append
+    Joins several lists into a single one.
+    #+begin_src Lisp
+    (append '(hi) '(my name is) '(kurt))
+    #+end_src
+*** find
+    Search a list for an item, and return the item.
+    #+begin_src Lisp
+    (find 'cat '(dog car cat rabbit))
+    #+end_src
+*** push
+    Add an element to the front of an existing list.
+    #+begin_src Lisp
+    (defparameter *items* '(dog car truck rabbit))
+    (push 'cat *items*)
+    #+end_src
+** alist functions
+*** assoc
+    Returns the /first/ key-value pair in an alist which matches the given key.
+    #+begin_src Lisp
+    (defparameter *colours* '((red primary)
+			      (blue primary)
+			      (green primary)
+			      (purple (not primary))))
+    (assoc 'red *colours*)
+    #+end_src
+** command line interaction
+*** print
+    Allows the printing of stuff to the console, with a newline at the end, and
+    a space after the value. The value of the statement is the thing being
+    printed, a side effect of which is that things will be printed twice in the
+    REPL.
+    #+begin_src Lisp
+    (print '(cat dog mousse))
+    #+end_src
+    Almost everything in Lisp can be printed with this function, with minimal
+    loss, such that they can be read back in using the =read= function.
+*** prin1
+    The same as print, but with no newline.
+*** princ
+    Tries to print things in a form that humans would prefer (i.e. without
+    quotation marks and other extraneous bits). Can be used to generate any
+    arbitrary bit of text, unlike print, which is limited by its printing
+    objects so that they can be read back in.
+*** read
+    Reads input from the user from the REPL. Returned to the program when return
+    is pressed.
+    #+begin_src Lisp
+    (defun hi ()
+	   (print "type something:")
+	   (let ((words (read)))
+	     (print "you typed: ")
+	     (print words)))
+    #+end_src
+    Can read practically anything that is a lisp structure - this means that it
+    can read stuff from files if it was output in the correct form.
+*** read-line
+    Reads a line, treating whatever was entered as a string.
+    #+begin_src 
+    (defun say-hello ()
+	   (princ "please type your name:")
+	   (let ((name (read-line)))
+		 (princ "nice to meet you,")
+		 (princ name)))
+    #+end_src
 ** other functions
+*** mapcar
+    Takes a function and a list, and applies the function to every member of the
+    list, creating a new list containing the function return values.
+    #+begin_src Lisp
+    (mapcar #'exp '(1 3 5 7 9))
+    #+end_src
 *** progn
     Used often in =if= statements when more than one thing has to be done in a
     branch. Only the last evaluation in the expression is returned as the value
@@ -178,8 +261,53 @@
     'even)
     #+end_src
 *** apply
+    Given a function and a list of objects, it will apply the function to each
+    separate object in the list.
+    #+begin_src Lisp
+    (apply #'append '((cheese) (is really rather) (tasty I believe)))
+    #+end_src
+    Can have problems with very long lists. Use =call-arguments-limit= variable
+    to see what it is.
 *** remove-if-not
-*** assoc
+    Removes every item from a list which does not return true for a given
+    function.
+    #+begin_src Lisp
+    (remove-if-not #'oddp '(1 2 3 4 5 6 7 8 9))
+    #+end_src
+*** eval
+    Allows the execution of data as code.
+    #+begin_src Lisp
+    (defparameter *sum* '(+ 2 3))
+    (eval *sum*)
+    #+end_src
+    Do not overuse this! There are times when macros are more appropriate.
+*** concatenate
+    Can be used to concatenate lists or strings.
+    #+begin_src Lisp
+    (concatenate 'string "hi " "i'm" " going to a party")
+    (concatenate 'list '(demons are present) '(in the fun) '(house))
+    #+end_src
+*** quote
+    Used to add a quote to the start of something. =\'foo= and =(quote foo)= are
+    equivalent.
+    #+begin_src Lisp
+    (append '(time) '(is null))
+    ;; broken because list is not quoted
+    ;(append '(time) (is null))
+    ;; the quote function adds a quote, the append works
+    (append '(time) (quote (is null)))
+    #+end_src
+* structures
+** association list
+   Also known as an alist. Associates data with a lookup key. Can find a value
+   in an alist by using the assoc function.
+   #+begin_src Lisp
+   (defparameter *colours* '((red primary)
+			     (blue primary)
+			     (green primary)
+			     (purple (not primary))))
+   (assoc 'red *colours*)
+   #+end_src
 * syntax
 ** conditionals
 Conditional commands are often [[special form]]s, which means that they do not have
@@ -270,6 +398,7 @@ is returned.
     #+end_src
     =case= can be more efficient than =cond=, especially when there are a large
     number of conditions.
+
     *important:* =case= uses =eq= for comparison! This means that you cannot use
     it to compare some things (e.g. strings).
 ** true and false
@@ -293,12 +422,54 @@ is returned.
    There is some debate as to whether the empty list and falsity should be the
    same thing.
 ** equality
+*** eq
+    Used to compare symbols with other symbols.
+
+    Can also compare conses, but returns true only if a cons is compared
+    directly to itself.
+    #+begin_src Lisp
+    ;; preferred way of comparing symbols
+    (eq 'cat 'cat)
+    #+end_src
+*** equal
+    Used to compare things which look the same. If unsure about which equality
+    to use, use this one.
+    #+begin_src Lisp
+    ;; lists
+    (equal '(1 2 3) (cons 1 (cons 2 (cons 3 nil)))))
+    (equal '(1 2 3) '(1 2 3))
+    ;; symbols
+    (equal 'cat 'cat)
+    #+end_src
+*** eql
+    Similar to eq, but also does number and character comparisons.
+*** equalp
+    Essentially the same as equals, but handles string with different
+    capitalisation, and can compare floating point numbers with integers.
+*** specific data types
+    =\== is used to compare numbers
+    
+    =string-equal= is for strings
+    
+    =char-equal= is for characters
 ** special characters
 *** '
     The single quote mark enters data mode. Anything in this mode will be treated
     as data and not as any type of command. This is called quoting.
 *** #'
+    A shortcut for the =function= operator. Allows the direct referencing of a
+    function, ensuring that it is not confused with local variable names.
+    #+begin_src Lisp
+    ;; these two are equivalent
+    (mapcar (function exp) '(1 3 5))
+    (mapcar #'exp '(1 3 5))
+    #+end_src
 *** `
+    Enters data mode, but allows flipping between data and code mode using a
+    comma. Called quasiquoting.
+    #+begin_src Lisp
+    `(2 + 1 is ,(+ 2 1) and 3 + 1 is ,(+ 3 1))
+    #+end_src
 * terminology
 ** quasiquoting
    This is the term for a piece of code which uses the backtick to allow
@@ -311,3 +482,101 @@ is returned.
    includes:
    1. Not having to evaluate all of its parameters (e.g. if)
       
+** higher order function
+   A function that accepts another function as an argument, e.g. =mapcar=.
+* concepts
+** stealth conditionals
+    The =and= and =or= functions can be used to do clean conditionals due to the
+    fact that Lisp uses shortcut boolean evaluation, along with their more usual
+    function.
+**** and
+     Evaluates to true if all the symbols passed to it are true.
+     #+begin_src Lisp
+     (and (oddp 1) (oddp 3) (oddp 5))
+     #+end_src
+     An example of cleaner conditionals because of the use of =and=:
+     #+begin_src Lisp
+     ;; Basic conditional - quite cumbersome
+     (if (*file-modified)
+         (if (ask-about-save)
+             (save-file)))
+     ;; better conditional
+     (and (*file-modified*) (ask-about-save) (save-file))
+     ;; best of both
+     (if (and (*file-modified*)
+	      (ask-about-save))
+	 (save-file))
+     #+end_src
+     In the first case, the standard conditional works, but is a little bit
+     cumbersome. The second, better one is a lot cleaner, and does exactly the
+     same thing. There is, however, the problem that =(save-file)= does more
+     than just returning true or false, and that might not be obvious. The third
+     case is the best of both, where only expressions that specifically return a
+     boolean are used in the conditional.
+**** or
+     Evaluates to true if at least one of the symbols passed to it is true.
+     #+begin_src Lisp
+     (or (oddp 1) (oddp 4) (oddp 8))
+     #+end_src
+     An example of the use of =or= as a conditional:
+     #+begin_src Lisp
+     ;; set the parameter to t only if the parameter is even.
+     (defparameter *ev* nil)
+     (or (oddp 4) (setf *ev* t)) 
+     #+end_src
+     Since =(oddp 4)= evaluates to false, execution continues to the next, so
+     the variable is set. If the value used was 5, then the or would stop after
+     finding that the value of =(oddp 5)= was true.
+** rich return values
+   Because of the way Lisp deals with truth and falsity, functions can return
+   more than just the truth. A good example is the =member= function, which
+   instead of just returning true or false, returns the member and subsequent
+   members in the list. The additional benefit of this is that it allows the
+   function to search for =nil= elements and still evaluate to true.
+
+   Another function which benefits from this is =find-if=, which returns the
+   first element of a list for which a given function evaluates to true. This
+   allows it to be used both for conditionals, and also to retrieve values.   
+
+** predicates
+   Functions which return true or false values are called predicates. Such
+   functions often have the =-p= suffix to indicate this, for example
+   =is-flag-set-p=.
+** keyword parameters
+   Some functions take keyword parameters which allow access to some built in
+   features.
+   #+begin_src Lisp
+   ;; finds elements in the list where the cadr value is 'y
+   (find 'y '((3 x) (4 y) (5 z)) :key #'cadr)
+   #+end_src
+   Keyword parameters have two parts.
+   1. The name, which begins with a colon (e.g. =:key=)
+   2. The value
+** code and data symmetry
+   Program code and data can be treated interchangeably in Lisp. This is called
+   /homoiconicity/.
+   
+   A simple example of the homoiconicity is with code and data mode, but it goes
+   deeper than this. Raw code stored inside a variable can be executed with the
+   =eval= function.
+   #+begin_src Lisp
+   (defparameter *sum* '(+ 2 3))
+   (eval *sum*)
+   #+end_src
+* idioms
+** push/assoc idiom
+   Pushing new items onto a list without removing previous ones seems a bit
+   weird. For example, in the text game, pushing an object onto the object list
+   again rather than removing or changing the location when the player picks it
+   up. When =assoc= is used, however, it always looks at the first key in the
+   list that matches, and so it seems almost as though the previous copy of the
+   object has been removed, where in fact it is still retained, keeping a
+   history of all the old values.
+* REPL
+** customisation
+   A REPL is easily customised by using some combination of the =read=, =eval=,
+   =print=, and =loop= functions. A basic REPL:
+   #+begin_src Lisp
+   (defun repl ()
+     (loop (print (eval (read)))))
+   #+end_src
