@@ -1,3 +1,5 @@
+;; allows you to play a basic text-based adventure game. Use the (game-repl) command to start.
+
 ;; The nodes in the directed graph that represents the possible places that the player can be in.
 (defparameter *nodes* '((living-room (you are in the living room. a wizard is snoring loudly on the couch.))
 			(garden (you are in a beautiful garden. there is a well in front of you.))
@@ -83,7 +85,7 @@
 (defun game-repl ()
   (let ((cmd (game-read)))
     (unless (eq (car cmd) 'quit)
-      (game-print (game-eval) cmd)
+      (game-print (game-eval cmd))
       (game-repl))))
 	
 ;; custom read function to stop having to use quotes and parens
@@ -108,17 +110,28 @@
       (eval sexp)
       '(i do not know that command)))
 
+;; tweak the given list of characters in such a way that they become sensible sentences.
 (defun tweak-text (lst caps lit)
+  ;; When the list isn't empty
   (when lst
+    ;; Store the first char and the rest in separate variables
     (let ((item (car lst))
 	  (rest (cdr lst)))
+      ;; examine the first char
+      ;; if it is a space, add it to the front of a recursive call to this
       (cond ((eq item #\space) (cons item (tweak-text rest caps lit)))
+	    ;; if the char is a sentence-ending character, make the next character caps
 	    ((member item '(#\! #\? #\.)) (cons item (tweak-text rest t lit)))
+	    ;; if it is a quotation, start or end a verbatim environment
 	    ((eq item #\") (tweak-text rest caps (not lit)))
+	    ;; if the lit variable is set, take the character exactly as it is
 	    (lit (cons item (tweak-text rest nil lit)))
-	    ((or caps lit) (cons (char-upcase item) (tweak-rest nil lit)))
+	    ;; if caps is set, upcase the character 
+	    ((or caps lit) (cons (char-upcase item) (tweak-text rest nil lit)))
+	    ;; default case, add a downcased character
 	    (t (cons (char-downcase item) (tweak-text rest nil nil)))))))
 
+;; print a list of symbols in a more readable form
 (defun game-print (lst)
   (princ (coerce (tweak-text (coerce (string-trim "() "
 						  (prin1-to-string lst))

@@ -20,22 +20,6 @@
     ;; shift right (=5)
     (ash 10 -1)
     #+END_SRC
-*** oddp
-    True if a number is odd
-    #+begin_src Lisp
-    ;; evaluates to T
-    (oddp 1)
-    ;; evaluates to nil
-    (oddp 2)
-    #+end_src
-*** evenp
-    True if a number is even
-    #+begin_src Lisp
-    ;; evaluates to nil
-    (evenp 1)
-    ;; evaluates to T
-    (evenp 2)
-    #+end_src
 ** definition functions
 *** defparameter
     Allows the definition of global variables. By convention, global variable
@@ -231,6 +215,9 @@
     #+end_src
     Can read practically anything that is a lisp structure - this means that it
     can read stuff from files if it was output in the correct form.
+
+    This command is dangerous, and can potentially be exploited by hackers to do
+    stuff that you don't want them to do.
 *** read-line
     Reads a line, treating whatever was entered as a string.
     #+begin_src 
@@ -240,6 +227,46 @@
 		 (princ "nice to meet you,")
 		 (princ name)))
     #+end_src
+** test functions
+*** alphanumericp
+    Test if a character is alphanumeric.
+*** digit-char-p
+    Test if a character is a digit.
+*** oddp
+    True if a number is odd
+    #+begin_src Lisp
+    ;; evaluates to T
+    (oddp 1)
+    ;; evaluates to nil
+    (oddp 2)
+    #+end_src
+*** evenp
+    True if a number is even
+    #+begin_src Lisp
+    ;; evaluates to nil
+    (evenp 1)
+    ;; evaluates to T
+    (evenp 2)
+    #+end_src
+
+** manipulation functions
+*** remove-if-not
+    Removes every item from a list which does not return true for a given
+    function.
+    #+begin_src Lisp
+    (remove-if-not #'oddp '(1 2 3 4 5 6 7 8 9))
+    #+end_src
+*** substitute-if
+    Substitute values based on a test function. Generic function.
+    #+begin_src Lisp
+    ;; lists
+    (substitute-if 'cat (lambda (nm) : (eq nm 'dog)) '(dog rabbit puppy dog dog
+    moggy mogwog))
+    ;; or strings
+    (substitute-if #\R (lambda (c) : (eq c #\e)) "hello me heartees, the feast
+    will begin!")
+    #+end_src
+
 ** other functions
 *** mapcar
     Takes a function and a list, and applies the function to every member of the
@@ -247,6 +274,8 @@
     #+begin_src Lisp
     (mapcar #'exp '(1 3 5 7 9))
     #+end_src
+*** mapc
+    More efficient version of mapcar, which does not return the transformed list.
 *** progn
     Used often in =if= statements when more than one thing has to be done in a
     branch. Only the last evaluation in the expression is returned as the value
@@ -268,12 +297,6 @@
     #+end_src
     Can have problems with very long lists. Use =call-arguments-limit= variable
     to see what it is.
-*** remove-if-not
-    Removes every item from a list which does not return true for a given
-    function.
-    #+begin_src Lisp
-    (remove-if-not #'oddp '(1 2 3 4 5 6 7 8 9))
-    #+end_src
 *** eval
     Allows the execution of data as code.
     #+begin_src Lisp
@@ -281,6 +304,9 @@
     (eval *sum*)
     #+end_src
     Do not overuse this! There are times when macros are more appropriate.
+
+    This command is dangerous, and can potentially be exploited by hackers to do
+    stuff that you don't want them to do.
 *** concatenate
     Can be used to concatenate lists or strings.
     #+begin_src Lisp
@@ -297,6 +323,26 @@
     ;; the quote function adds a quote, the append works
     (append '(time) (quote (is null)))
     #+end_src
+*** coerce
+    Allows conversion between strings and lists
+    #+begin_src Lisp
+    (defparameter a nil)
+    ;; string to list
+    (setf a (coerce "I am a string variable!" 'list))
+    ;; get a string back from a
+    (coerce a 'string)
+    #+end_src
+*** complement
+    Creates the opposite of a test function such as alphanumericp.
+    #+begin_src Lisp
+    (substitute-if #\Z #'alphanumericp "This is a 123 &!^!^ 8123 string")
+    (substitute-if #\Z (complement #'alphanumericp) "This is a 123 &!^!^ 8123 string")
+    #+end_src 
+*** prin1-to-string
+    Prints a symbol to a string with no newline terminator.
+*** write-to-string
+    Write something to a string. This function has a lot of keyword options
+    which modify its output.
 * structures
 ** association list
    Also known as an alist. Associates data with a lookup key. Can find a value
@@ -307,6 +353,46 @@
 			     (green primary)
 			     (purple (not primary))))
    (assoc 'red *colours*)
+   #+end_src
+
+   According to convention, the first appearance of the key in the list is
+   assumed to contain the value that you are interested in. This is very much
+   related to the [[push/assoc idiom]].
+
+   Alists are relatively slow for anything more than about 12 items, so other
+   structures might be more useful.
+** dotted list
+   A list which ends in something other than a =nil=. Not so useful for
+   programming, but as cons cells are used so much, can be encountered
+   occasionally.
+   #+begin_src Lisp
+   (cons 1 (cons 2 3)
+   #+end_src
+   Can also think of the dot notation as an alternate way of defining lists:
+   #+begin_src Lisp
+   '(1 . (2 . (3 . nil)))
+   #+end_src
+** pairs
+   Common and practical use of dotted lists. Good because you can extract stuff
+   from pairs just using =car= and =cdr=, and efficient because only one cons
+   cell has to be allocated.
+   #+begin_src Lisp
+   (cons 1 2)
+   #+end_src
+** circular list
+   Before playing with circular lists, remember to do this:
+   #+begin_src 
+   (setf *print-circle* t)
+   #+end_src
+   Cons cells can point to anything in memory, and so it makes sense that a cell
+   at the end of a list can point to the one at the start, or any other one in
+   the list, as they are all in theory independent entities.
+   
+   Creating a circular list is relatively easy---we just need to make the end of
+   the list point to the start (for example)
+   #+begin_src Lisp
+   (defparameter lst '(1 2 3))
+   (setf (cdddr lst) lst)
    #+end_src
 * syntax
 ** conditionals
@@ -484,6 +570,9 @@ is returned.
       
 ** higher order function
    A function that accepts another function as an argument, e.g. =mapcar=.
+** generic function
+   A function that can accept multiple data types as parameters and handle them
+   correctly, e.g. substitute-if.
 * concepts
 ** stealth conditionals
     The =and= and =or= functions can be used to do clean conditionals due to the
@@ -563,6 +652,29 @@ is returned.
    (defparameter *sum* '(+ 2 3))
    (eval *sum*)
    #+end_src
+** lambda
+   Super. Important.
+
+   In Lisp, functions are things that can be passed around just as any other
+   thing that you might want to use.
+   #+begin_src Lisp
+   (defun half (n)
+     (/ n 2))
+   (mapcar #'half '(2 3 5 7 9 11 13 14))
+   ;; is equivalent to
+   (mapcar (lambda (n) (/ n 2)) '(2 3 5 7 9 11 13 14))
+   #+end_src
+   Lambda allows the definition of functions without having to give them a
+   name. This means that you don't have to define functions which aren't used
+   much explicitly, but use lambdas instead.
+
+   The lambda command is a macro. As a result, it does not have to evaluate all
+   of its parameters. In general, talking about lambdas means talking about
+   functions defined using the lambda macro.
+
+   Lambda forms the most central part of Lisp. In a mathematical sense, there is
+   no command other than lambda. Thus, Lisp is, in its entirety, derived from
+   this very command.
 * idioms
 ** push/assoc idiom
    Pushing new items onto a list without removing previous ones seems a bit
