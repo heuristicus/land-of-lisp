@@ -56,10 +56,20 @@
     in the body of the let function, after the variable definitions. The whole
     list of declared variables is surrounded by parens, as well as each
     individual variable definitions.
+
     #+begin_src Lisp
     (let ((a 5)
-    (b 6))
-    (+ a b))
+          (b 6))
+     (+ a b))
+    #+end_src
+*** let*
+    Allows the definition of local variables, and in addition allows the
+    variables to refer to each other in their definitions.
+    
+    #+begin_src Lisp
+    (let ((a 5)
+          (b (+ a 2)))
+     (+ a b))
     #+end_src
 *** flet
     Allows the definition of local functions in very much the same way as the let
@@ -175,6 +185,11 @@
     (defparameter *items* '(dog car truck rabbit))
     (push 'cat *items*)
     #+end_src
+*** set-difference
+    Return all items present in one list that are not present in the other.
+    #+begin_src Lisp
+    (set-difference '(cat dog rabbit bunny horse cheese) '(cat dog horse))
+    #+end_src
 ** alist functions
 *** assoc
     Returns the /first/ key-value pair in an alist which matches the given key.
@@ -267,12 +282,31 @@
     will begin!")
     #+end_src
 
+** file operation functions
+*** with-open-file
+    Similar to the =let= command, but defines a stream variable which can be
+    used for various operations to do with files.
+    #+begin_src Lisp
+    (with-open-file (my-stream
+                     "testfile.txt"
+		     :direction :output
+		     :if-exists :supersede)
+     (princ "Hello file!" my-stream))
+    #+end_src
+     Lots of keyword parameters. 
 ** other functions
 *** mapcar
     Takes a function and a list, and applies the function to every member of the
     list, creating a new list containing the function return values.
     #+begin_src Lisp
     (mapcar #'exp '(1 3 5 7 9))
+    #+end_src
+*** maplist
+    Similar to =mapcar=, but instead of just receiving the front of the list,
+    the function that the list is passed to receives the current element, plus
+    all the elements after it in the list.
+    #+begin_src Lisp
+    (maplist #'print '(a s d f one two three))
     #+end_src
 *** mapc
     More efficient version of mapcar, which does not return the transformed list.
@@ -343,6 +377,37 @@
 *** write-to-string
     Write something to a string. This function has a lot of keyword options
     which modify its output.
+*** funcall
+    Calls a function, usually one which is received as a parameter.
+    #+begin_src Lisp
+    (defun my-func (number func)
+      (+ (funcall func) number))
+
+    (my-func 10 (lambda () 20))
+    #+end_src
+*** load
+    Loads the lisp code from the given file so that it can be used in the
+    current file.
+    #+begin_src Lisp
+    ;; allow the use of functions defined in the file graph-gen.lisp
+    (load "graph-gen")    
+    #+end_src
+*** random
+    Generates a random integer in the range [0,arg).
+    #+begin_src Lisp
+    (random 10)
+    #+end_src
+*** loop
+    Used to loop over various types of data. Can be used to create lists.
+    #+begin_src Lisp
+    ;; list of 10 ones
+    (loop repeat 10 collect 1)
+    ;; list from 1..10
+    (loop for n from 1 to 10 collect n)
+    #+end_src
+    The collect command specifies what we should put into the list on each
+    loop. Loop and connect are linked. After collect we can specify any
+    arbitrary operation to define what gets added to the list.
 * structures
 ** association list
    Also known as an alist. Associates data with a lookup key. Can find a value
@@ -556,6 +621,17 @@ is returned.
     #+begin_src Lisp
     `(2 + 1 is ,(+ 2 1) and 3 + 1 is ,(+ 3 1))
     #+end_src
+*** :
+    Placing the colon before a symbol makes it a keyword, which always means
+    itself, and cannot be redefined.
+    #+begin_src Lisp
+    :cat
+    ;; error - cannot change cat
+    (let ((:cat 5))
+      :cat)
+    #+end_src
+    This can be used to reduce errors, when it is known that a symbol always
+    means itself, and can also be optimised by the compiler.
 * terminology
 ** quasiquoting
    This is the term for a piece of code which uses the backtick to allow
@@ -675,6 +751,11 @@ is returned.
    Lambda forms the most central part of Lisp. In a mathematical sense, there is
    no command other than lambda. Thus, Lisp is, in its entirety, derived from
    this very command.
+** thunks/suspensions
+   Often create functions with no arguments to describe computations that should
+   be run later. Functions with no arguments are called /nullary functions/. In
+   the scenario of computations to be run later, they are also known as /thunks/
+   or /suspensions/.
 * idioms
 ** push/assoc idiom
    Pushing new items onto a list without removing previous ones seems a bit
